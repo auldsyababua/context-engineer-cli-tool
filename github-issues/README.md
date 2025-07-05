@@ -70,18 +70,33 @@ Accountability system with human gates and learning from failures.
 ### 16. [Overseer Agent](16-overseer-agent.md)
 Independent anomaly detection agent providing "red team" monitoring.
 
+### 17. [Agent Handoff Mechanism](17-agent-handoff-mechanism.md)
+Standardized input/output mechanism for agent communication and automation.
+
+## Developer Experience Enhancements
+
+### 18. [Local Services Bundle](18-local-services-bundle.md)
+Bundle n8n, Supabase, Redis and other services as optional CLI add-ons with per-project integration.
+
+### 19. [Development Environment Containers](19-development-environment-containers.md)
+Pre-configured dev containers with language runtimes and tools for instant project startup.
+
+### 20. [Native Ollama Integration](20-ollama-integration.md)
+Seamless local LLM execution with automatic model management for offline development.
+
 ## Implementation Priority
 
 ### Phase 1 - Core Experience
 1. Auto-Launch Claude Code (#1)
 2. Workflow State Management (#4)
-3. Automated Testing Pipeline (#6)
+3. Agent Handoff Mechanism (#17) - Foundation for automation
+4. Automated Testing Pipeline (#6)
 
 ### Phase 2 - Enhanced Workflow
-4. Web Dashboard (#5)
-5. Rich Project Templates (#7)
-6. Task Tracker MCP (#15) - Accountability first
-7. Documentation Agent (#12) - Immediate value
+5. Web Dashboard (#5)
+6. Rich Project Templates (#7)
+7. Task Tracker MCP (#15) - Accountability first
+8. Documentation Agent (#12) - Immediate value
 
 ### Phase 3 - Specialized Agents
 8. Debugger Agent (#11) - Error handling
@@ -95,6 +110,11 @@ Independent anomaly detection agent providing "red team" monitoring.
 14. Overseer Agent (#16) - Anomaly detection
 15. n8n Flow Creator (#14) - Automation
 16. Monitoring & Analytics (#10) - Insights
+
+### Phase 5 - Developer Experience
+17. Local Services Bundle (#18) - n8n, Supabase, Redis
+18. Development Containers (#19) - Instant environments
+19. Native Ollama Integration (#20) - Local LLMs
 
 ## Agent Evolution Path
 
@@ -114,9 +134,13 @@ Successfully integrated:
 - ✓ Safety mechanisms (#2, #16)
 
 Still to consider:
-- **Local Model Management**: Simplify Ollama usage
 - **Security Enhancements**: Sandboxing and secret management
 - **External Integrations**: GitHub, CI/CD, issue trackers
+
+Newly addressed:
+- ✓ Local Model Management (#20 - Ollama Integration)
+- ✓ Development environments (#19 - Dev Containers)
+- ✓ Local services (#18 - n8n, Supabase, Redis)
 
 ## Contributing
 
