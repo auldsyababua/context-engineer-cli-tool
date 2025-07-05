@@ -2,6 +2,18 @@
 
 This directory contains enhancement proposals for the Context Engineer CLI Tool. These issues should be created on GitHub to track future development.
 
+## Philosophy: Specialized Agents Enhance Context Engineer
+
+Rather than countering the Context Engineer philosophy, specialized agents with specific tools, MCPs, and models actually **enhance** it by:
+
+1. **Better Quality**: Each agent excels at its specific task
+2. **Faster Development**: Specialized models work more efficiently
+3. **Smarter Workflows**: Agents can collaborate and learn
+4. **Maintained Structure**: Still follows phase-based development
+5. **Human Oversight**: Accountability and approval gates
+
+Think of it as evolving from a single developer to a full development team, each with specialized skills.
+
 ## Core Enhancements
 
 ### 1. [Auto-Launch Claude Code](01-auto-launch-claude-code.md)
@@ -38,6 +50,26 @@ Sophisticated agent teamwork with parallel execution.
 ### 10. [Monitoring & Analytics](10-monitoring-analytics.md)
 Comprehensive metrics and insights for optimization.
 
+## Specialized Agents
+
+### 11. [Debugger Agent](11-debugger-agent.md)
+Expert debugging with specialized error analysis tools and models.
+
+### 12. [Documentation Agent](12-documentation-agent.md)
+Automatic documentation generation and repository organization guardian.
+
+### 13. [Refactor Agent](13-refactor-agent.md)
+Code quality improvement specialist for performance and maintainability.
+
+### 14. [n8n Flow Creator Agent](14-n8n-flow-creator.md)
+Automation workflow generator for CI/CD, testing, and monitoring.
+
+### 15. [Task Tracker MCP](15-task-tracker-mcp.md)
+Accountability system with human gates and learning from failures.
+
+### 16. [Overseer Agent](16-overseer-agent.md)
+Independent anomaly detection agent providing "red team" monitoring.
+
 ## Implementation Priority
 
 ### Phase 1 - Core Experience
@@ -48,29 +80,50 @@ Comprehensive metrics and insights for optimization.
 ### Phase 2 - Enhanced Workflow
 4. Web Dashboard (#5)
 5. Rich Project Templates (#7)
-6. Prompt Versioning (#8)
+6. Task Tracker MCP (#15) - Accountability first
+7. Documentation Agent (#12) - Immediate value
 
-### Phase 3 - Advanced Features
-7. AI Rails Integration (#2)
-8. Multi-Agent Orchestration (#9)
-9. Specialized Agent Models (#3)
-10. Monitoring & Analytics (#10)
+### Phase 3 - Specialized Agents
+8. Debugger Agent (#11) - Error handling
+9. Refactor Agent (#13) - Quality improvement
+10. Prompt Versioning (#8) - Continuous improvement
+11. Specialized Agent Models (#3) - Performance boost
+
+### Phase 4 - Advanced Features
+12. AI Rails Integration (#2) - Safety mechanisms
+13. Multi-Agent Orchestration (#9) - Team collaboration
+14. Overseer Agent (#16) - Anomaly detection
+15. n8n Flow Creator (#14) - Automation
+16. Monitoring & Analytics (#10) - Insights
+
+## Agent Evolution Path
+
+The specialized agents can be introduced gradually:
+
+1. **Start Simple**: Basic phase-based workflow
+2. **Add Accountability**: Task Tracker MCP for oversight
+3. **Introduce Specialists**: One agent at a time
+4. **Enable Collaboration**: Multi-agent orchestration
+5. **Add Oversight**: Overseer for safety
 
 ## Additional Ideas from ai-rails-tdd
 
-These features from the original ai-rails-tdd project could also be adapted:
+Successfully integrated:
+- ✓ All specialized agents (#11-16)
+- ✓ Task accountability system (#15)
+- ✓ Safety mechanisms (#2, #16)
 
+Still to consider:
 - **Local Model Management**: Simplify Ollama usage
 - **Security Enhancements**: Sandboxing and secret management
 - **External Integrations**: GitHub, CI/CD, issue trackers
-- **Redis State Management**: Already covered in #4
-- **CLI Workflow Automation**: Partially covered in #1
 
 ## Contributing
 
 When creating these issues on GitHub:
 1. Use the enhancement label
 2. Add appropriate priority labels
-3. Link related issues
+3. Link related issues (especially agent dependencies)
 4. Consider creating a project board
-5. Welcome community contributions
+5. Tag issues with "agent" for agent-related enhancements
+6. Welcome community contributions
