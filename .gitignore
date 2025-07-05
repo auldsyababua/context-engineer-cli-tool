@@ -17,11 +17,22 @@ Thumbs.db
 config/user-settings.conf
 .env
 .env.local
+.env.mcp
+*.env
 
 # Personal infrastructure configs
 config/personal-setup.env
 .personal-config
 personal-configs/
+mcp-infra-manager/
 
 # Sensitive test data
 test-with-real-keys/
+
+# MCP runtime files
+.mcp/
+*.pid
+
+# Session files
+.context-session
+.current-phase

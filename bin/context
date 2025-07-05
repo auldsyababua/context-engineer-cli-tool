@@ -170,7 +170,7 @@ context_engineer_setup() {
     # Create project structure
     print_header "Creating Project Structure..."
     
-    mkdir -p "$project_path"/{.claude/commands,.mcp,examples,tests,docs}
+    mkdir -p "$project_path"/{.claude/commands,examples,tests,docs}
     
     # Copy templates based on project type
     case $project_type in
@@ -568,15 +568,12 @@ case "${1:-}" in
         echo "  --help     Show this help message"
         echo "  --version  Show version information"
         echo ""
-        echo "Related MCP Commands:"
-        echo "  mcp-sync            Sync MCP configs from workhorse"
-        echo "  mcp-inject          Inject API keys into project MCPs"
-        echo "  mcp-phase           Manage phase-based MCP activation"
-        echo "  mcp-workhorse-setup Initial setup on workhorse server"
+        echo "MCP Management:"
+        echo "  mcp-manager         Manage all MCP services (~/mcp-infra-manager/bin/mcp-manager)"
+        echo "                      Usage: mcp-manager [list|start|stop|profile|keys|help]"
         echo ""
         echo "Workflow Commands:"
         echo "  context-auto        Auto-pilot mode with phase progression"
-        echo "  context-mcp         MCP catalog management"
         echo ""
         echo "See individual command --help for more details"
         ;;

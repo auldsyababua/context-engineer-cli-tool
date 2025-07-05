@@ -1,6 +1,6 @@
 # Context Engineer CLI Tool
 
-🚀 An interactive CLI tool that sets up Context Engineering projects in seconds, complete with templates, documentation, and AI-powered development workflows.
+🚀 A CLI tool designed for Claude Code that structures AI-assisted development with clear phases, automated workflows, and optional MCP (Model Context Protocol) integration.
 
 ## ✨ Features
 
@@ -8,10 +8,10 @@
 - **Auto-Pilot Mode**: Continuous development workflow with automatic progression
 - **Git Safety Net**: Auto-commits after each step for easy rollback
 - **Session Persistence**: Resume development anytime, even after restarts
-- **MCP Integration**: Phase-aware Model Context Protocol server management
+- **Claude Code Integration**: Optimized prompts and workflows for Claude Code
+- **Optional MCP Support**: Enhanced capabilities with GitHub, search, and context persistence
 - **Customizable Templates**: Pre-configured files for different project types
 - **Language Support**: Python, TypeScript, JavaScript, Go, and more
-- **AI-Ready**: Includes Claude Code commands for automated implementation
 - **Best Practices**: Enforces code organization, testing, and documentation standards
 
 ## 🎯 What is Context Engineering?
