@@ -30,7 +30,7 @@ The setup script will ask about MCP (Model Context Protocol) services:
 - **Docker MCPs** - Coming soon, better isolation
 - **Systemd MCPs** - Advanced Linux setup
 
-For most users, we recommend either "No MCPs" or "Local MCPs".
+For most users, we recommend either "Local MCPs" unless you have a linux machine, then we recommend "Systemd MCPs".
 
 ### 3. Configure Environment
 
@@ -59,9 +59,26 @@ cp .env.mcp.example .env.mcp
 nano .env.mcp
 ```
 
-Recommended MCPs:
-- **GitHub** - Get token at https://github.com/settings/tokens/new
-- **Brave Search** - Free tier at https://brave.com/search/api/
+### Recommended MCPs
+
+We recommend installing these MCPs for the best experience:
+
+1. **GitHub** - Essential for repository context
+   - Get token at https://github.com/settings/tokens/new
+   - Scopes needed: `repo`, `read:org`
+
+2. **MCP-OmniSearch** - Unified search across multiple providers
+   - Supports Brave, Kagi, Perplexity, Tavily, and more
+   - You can use just one provider (e.g., only Brave's free tier)
+   - Get Brave API key at https://brave.com/search/api/
+   - Other providers optional but enhance search capabilities
+
+3. **Context7** - Persistent memory across sessions
+   - Sign up at https://upstash.com
+   - Create a Redis database
+
+4. **Sequential Thinking** - Advanced reasoning
+   - No API key needed
 
 ## Using with Claude Code
 
