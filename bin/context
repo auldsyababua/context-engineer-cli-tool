@@ -13,7 +13,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Default configuration
-DEFAULT_PROJECTS_DIR="$HOME/Desktop/projects"
+DEFAULT_PROJECTS_DIR="${CONTEXT_ENGINEER_PROJECTS_DIR:-$HOME/projects}"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TEMPLATES_DIR="$(dirname "$SCRIPT_DIR")/templates"
 
@@ -569,8 +569,7 @@ case "${1:-}" in
         echo "  --version  Show version information"
         echo ""
         echo "MCP Management:"
-        echo "  mcp-manager         Manage all MCP services (~/mcp-infra-manager/bin/mcp-manager)"
-        echo "                      Usage: mcp-manager [list|start|stop|profile|keys|help]"
+        echo "  generate-mcp-config Generate MCP configuration for Claude Code"
         echo ""
         echo "Workflow Commands:"
         echo "  context-auto        Auto-pilot mode with phase progression"

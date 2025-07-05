@@ -1,103 +1,174 @@
-# MCP Integration with Context Engineer CLI Tool
+# MCP Integration Guide
 
 ## Overview
 
-Context Engineer CLI Tool integrates with MCP services through the MCP Infrastructure Manager, which provides centralized management and profile-based access control.
+Context Engineer CLI Tool can integrate with MCP (Model Context Protocol) services to enhance Claude Code's capabilities. MCPs are optional but recommended for the best experience.
 
-## MCP Infrastructure Manager
+## What are MCPs?
 
-The MCP Infrastructure Manager is a separate project located at `~/mcp-infra-manager/` that handles:
-- Service registration and configuration
-- Profile-based access control
-- API key management
-- Service lifecycle management
+MCPs provide Claude Code with additional capabilities like:
+- **GitHub integration** - Direct repository access
+- **Web search** - Research and documentation lookup
+- **Persistent memory** - Context across sessions
+- **File system access** - Read/write files directly
 
-## Integration Method
+## Quick Setup
 
-### 1. Install the MCP Client Library
-
-```python
-# Add to your imports
-import sys
-sys.path.append(os.path.expanduser('~/mcp-infra-manager/api'))
-from client import MCPInfraClient
-```
-
-### 2. Initialize the Client
-
-```python
-# In your initialization code
-mcp_client = MCPInfraClient()
-```
-
-### 3. Use in Your Planner
-
-```python
-def create_agent_prompt(task, project_context):
-    # Base prompt
-    prompt = f"Task: {task}\n"
-    
-    # Add MCP services based on context
-    profile = mcp_client.determine_profile(task, project_context)
-    mcp_section = mcp_client.generate_prompt_section(profile)
-    
-    return prompt + mcp_section
-```
-
-## How It Works
-
-1. **Profile Selection**: The system automatically selects an MCP profile based on:
-   - Project path (e.g., "ai-rails" → ai-rails profile)
-   - Task keywords (e.g., "research" → research profile)
-   - Context clues (e.g., "sensitive" → restricted profile)
-
-2. **Service Access**: Each profile defines which MCP services the agent can see:
-   - `default`: Basic services (GitHub, Filesystem, Memory)
-   - `research`: Extended search capabilities
-   - `development`: Code analysis tools
-   - `project-specific`: Custom services for specific projects
-
-3. **Security**: Agents only know about services in their profile, preventing unauthorized access through information hiding.
-
-## Managing MCP Services
-
-All MCP management is handled through the MCP Infrastructure Manager:
+### 1. Configure API Keys
 
 ```bash
-# Check available services
-mcp-manager list
+# Copy the example file
+cp .env.mcp.example .env.mcp
 
-# Start a service
-mcp-manager start omnisearch
-
-# Check API keys
-mcp-manager keys check
-
-# View profile services
-mcp-manager profile research
+# Edit with your API keys
+nano .env.mcp  # or your preferred editor
 ```
 
-## Adding New MCPs
+### 2. Generate MCP Configuration
 
-To add a new MCP service:
+```bash
+# Generate config for Claude Code
+./bin/generate-mcp-config
 
-1. Edit `~/mcp-infra-manager/registry/services.yaml`
-2. Add the service definition
-3. Include it in appropriate profiles
-4. Set any required API keys
+# Config will be created at:
+# ~/.config/claude-code/mcp-config.json
+```
 
-See the MCP Infrastructure Manager documentation for detailed instructions.
+### 3. Restart Claude Code
+
+After generating the configuration, restart Claude Code to load the new MCPs.
+
+## Recommended MCPs
+
+### Essential
+1. **GitHub** - Repository integration
+   - Get token at: https://github.com/settings/tokens/new
+   - Scopes needed: `repo`, `read:org`
+
+### Highly Recommended
+2. **MCP-OmniSearch** - Unified web search
+   - Supports multiple search providers
+   - Free tier available via Brave Search API
+   - Get Brave key at: https://brave.com/search/api/
+
+3. **Context7** - Persistent memory
+   - Sign up at: https://upstash.com
+   - Create a Redis database
+   - Copy the URL and token
+
+4. **Sequential Thinking** - Advanced reasoning
+   - No API key needed
+   - Automatically included
 
 ## Environment Variables
 
-MCP-related environment variables are managed centrally:
-- Global config: `~/.config/mcp/.env`
-- Service-specific: Defined in the registry
+### Basic Setup (.env)
+```bash
+# Project configuration
+MCP_MODE=local  # Options: none, local, docker, systemd
+
+# Editor preference
+EDITOR=code  # or cursor, vim, etc.
+```
+
+### MCP API Keys (.env.mcp)
+```bash
+# GitHub
+GITHUB_TOKEN=your-github-token
+
+# Search (OmniSearch)
+BRAVE_API_KEY=your-brave-key
+# Optional additional search providers:
+# KAGI_API_KEY=your-kagi-key
+# PERPLEXITY_API_KEY=your-perplexity-key
+
+# Memory (Context7)
+UPSTASH_REDIS_URL=your-redis-url
+UPSTASH_REDIS_TOKEN=your-redis-token
+```
+
+## MCP Modes
+
+### 1. No MCPs (`MCP_MODE=none`)
+- Simplest setup
+- No additional configuration needed
+- Context Engineer works fine without MCPs
+
+### 2. Local MCPs (`MCP_MODE=local`)
+- Uses npx to run MCPs locally
+- Recommended for most users
+- Requires Node.js 18+
+
+### 3. Docker MCPs (`MCP_MODE=docker`)
+- Better isolation
+- Coming soon
+
+### 4. Advanced Setup (`MCP_MODE=systemd`)
+- For Linux users
+- System-level services
+- Best performance
+
+## Phase-Based MCP Usage
+
+Different project phases benefit from different MCPs:
+
+### Planning/Research Phase
+- **OmniSearch** - Research patterns and solutions
+- **Sequential Thinking** - Complex reasoning
+- **Context7** - Remember decisions
+
+### Implementation Phase
+- **GitHub** - Code repository access
+- **Context7** - Maintain context
+- **Filesystem** - Direct file manipulation
+
+### Testing/Review Phase
+- **GitHub** - PR and issue management
+- **Sequential Thinking** - Test strategy
+- **Context7** - Track test results
 
 ## Troubleshooting
 
-- **Service not available**: Check if it's included in the profile
-- **API errors**: Verify keys with `mcp-manager keys check`
-- **Connection issues**: Ensure services are running with `mcp-manager list`
+### MCPs not working?
+1. Check your API keys in `.env.mcp`
+2. Regenerate config: `./bin/generate-mcp-config`
+3. Restart Claude Code
+4. Check logs: `~/.mcp/logs/`
 
-For more details, see the MCP Infrastructure Manager at `~/mcp-infra-manager/`
+### Which providers are free?
+- **GitHub** - Free with account
+- **Brave Search** - Free tier available
+- **Sequential Thinking** - Always free
+- **Filesystem/Memory** - Always free
+
+### Can I use without MCPs?
+Yes! Context Engineer works great without MCPs. They simply enhance the experience.
+
+## Advanced Configuration
+
+### Custom MCP Servers
+You can add custom MCP servers by editing the generated config:
+
+```json
+{
+  "mcpServers": {
+    "custom-server": {
+      "command": "node",
+      "args": ["path/to/server.js"],
+      "env": {
+        "API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+### Project-Specific MCPs
+Create `.env.mcp` in your project directory to override global settings.
+
+## Security Notes
+
+- Never commit `.env.mcp` files
+- Use environment variables for all secrets
+- Rotate API keys regularly
+- Review MCP permissions

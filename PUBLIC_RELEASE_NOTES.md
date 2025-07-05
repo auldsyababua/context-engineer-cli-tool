@@ -65,8 +65,7 @@ git commit
 
 ### Separate MCP Infrastructure Manager
 
-The advanced MCP management system (systemd-based) has been moved to:
-- Location: `~/mcp-infra-manager/`
+The advanced MCP management system (systemd-based) can be set up separately if needed.
 - This is optional for public users
 - Most users will use "local" mode instead
 

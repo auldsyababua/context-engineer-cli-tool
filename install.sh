@@ -39,7 +39,7 @@ fi
 # Make the scripts executable
 chmod +x "$SCRIPT_DIR/bin/context"
 chmod +x "$SCRIPT_DIR/bin/context-auto"
-chmod +x "$SCRIPT_DIR/bin/context-mcp"
+chmod +x "$SCRIPT_DIR/bin/generate-mcp-config"
 print_success "Made scripts executable"
 
 # Detect shell
@@ -56,9 +56,9 @@ fi
 
 print_success "Detected $SHELL_NAME shell"
 
-# Check for jq (required for context-mcp)
+# Check for jq (optional for some features)
 if ! command -v jq &> /dev/null; then
-    echo -e "${YELLOW}⚠️  jq is not installed (required for context-mcp)${NC}"
+    echo -e "${YELLOW}⚠️  jq is not installed (optional for some features)${NC}"
     echo "Install with:"
     echo "  macOS: brew install jq"
     echo "  Ubuntu/Debian: sudo apt-get install jq"
@@ -90,8 +90,8 @@ if ! grep -q "alias cea=" "$SHELL_RC" 2>/dev/null; then
 fi
 
 if ! grep -q "alias cem=" "$SHELL_RC" 2>/dev/null; then
-    echo "alias cem='context-mcp'" >> "$SHELL_RC"
-    print_success "Created 'cem' alias for MCP manager"
+    echo "alias cemcp='./bin/generate-mcp-config'" >> "$SHELL_RC"
+    print_success "Created 'cemcp' alias for MCP config generator"
 fi
 
 # Installation complete
@@ -105,10 +105,10 @@ echo ""
 echo "2. Run the tool:"
 echo -e "   ${YELLOW}context${NC}      (standard setup)"
 echo -e "   ${YELLOW}context-auto${NC} (auto-pilot mode)"
-echo -e "   ${YELLOW}context-mcp${NC}  (MCP manager)"
+echo -e "   ${YELLOW}generate-mcp-config${NC}  (MCP configuration generator)"
 echo -e "   ${YELLOW}ce${NC}           (alias for context)"
 echo -e "   ${YELLOW}cea${NC}          (alias for context-auto)"
-echo -e "   ${YELLOW}cem${NC}          (alias for context-mcp)"
+echo -e "   ${YELLOW}cemcp${NC}        (alias for generate-mcp-config)"
 echo ""
 echo "3. For help:"
 echo -e "   ${YELLOW}context --help${NC}"
@@ -122,7 +122,7 @@ if [[ "$reload_now" == "y" ]]; then
     export PATH="$SCRIPT_DIR/bin:$PATH"
     alias ce='context'
     alias cea='context-auto'
-    alias cem='context-mcp'
+    alias cemcp='./bin/generate-mcp-config'
     print_success "Shell configuration reloaded. You can now use all commands!"
 else
     echo -e "\n${YELLOW}Remember to run: source $SHELL_RC${NC}"

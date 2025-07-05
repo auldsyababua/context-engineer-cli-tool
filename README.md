@@ -194,24 +194,17 @@ Each phase's `INITIAL.md` includes recommended MCPs:
 
 ### Secure MCP Setup (Recommended)
 
-Store API keys securely on your workhorse server:
+Store API keys securely:
 
 ```bash
-# One-time setup on workhorse (192.168.86.210)
-mcp-workhorse-setup
+# Configure MCP API keys
+cp .env.mcp.example .env.mcp
+# Edit .env.mcp with your API keys
 
-# Sync configurations to local
-mcp-sync
+# Generate MCP configuration
+./bin/generate-mcp-config
 
-# In your project, activate phase MCPs
-mcp-phase activate research    # For planning/analysis
-mcp-phase activate development # For coding
-mcp-phase activate testing     # For testing
-
-# Inject API keys from workhorse
-mcp-inject
-
-# Restart Claude Desktop
+# Configuration will be created at ~/.config/claude-code/mcp-config.json
 ```
 
 ### Phase-Based Workflow
@@ -222,16 +215,7 @@ Different phases get different MCPs automatically:
 - **Development Phase**: context7, memory, github, filesystem  
 - **Testing Phase**: memory, filesystem, test runners
 
-### Quick MCP Commands
-
-```bash
-mcp-phase list       # Show available phases
-mcp-phase current    # Show active MCPs
-mcp-sync            # Sync from workhorse
-mcp-inject          # Inject API keys
-```
-
-See [MCP Workflow Guide](docs/MCP_WORKFLOW_GUIDE.md) for detailed setup.
+See [MCP Integration Guide](docs/MCP_INTEGRATION.md) for detailed setup.
 
 ## 🎨 Customization
 
@@ -324,23 +308,19 @@ MIT License - feel free to use for any project!
 
 ## 🙏 Credits & Acknowledgments
 
-**Humbly forked from** the original Context Engineering methodology created by Cole Medin.
+**Inspired by** the Context Engineering methodology.
 
-This CLI tool builds upon Cole's brilliant Context Engineering approach, adding:
+This CLI tool implements the Context Engineering approach, adding:
 - Auto-pilot mode for continuous development
 - Session persistence and resumability  
 - Git integration with auto-commits
 - Interactive project setup wizard
 - Multi-language support
 
-### Contributing Back
-
-We'd love to contribute these enhancements back to the original project! If you find these additions useful, we plan to submit a PR to Cole's repository to share these improvements with the wider community.
-
 ### Special Thanks
 
-- **Cole Medin** - For creating the Context Engineering methodology and making it open source
 - The Context Engineering community - For inspiration and feedback
+- All contributors who help improve this tool
 
 ---
 
