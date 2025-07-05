@@ -1,0 +1,82 @@
+{
+  "permissions": {
+    "git": {
+      "enabled": true,
+      "commands": {
+        "add": true,
+        "commit": true,
+        "status": true,
+        "diff": true,
+        "log": true,
+        "branch": true,
+        "checkout": true,
+        "merge": true,
+        "pull": true,
+        "push": false,
+        "reset": false,
+        "rebase": false
+      }
+    },
+    "npm": {
+      "enabled": true,
+      "commands": {
+        "install": true,
+        "run": true,
+        "test": true,
+        "build": true,
+        "start": true,
+        "init": false,
+        "publish": false,
+        "uninstall": false
+      }
+    },
+    "pip": {
+      "enabled": true,
+      "commands": {
+        "install": true,
+        "freeze": true,
+        "list": true,
+        "show": true,
+        "uninstall": false
+      }
+    },
+    "filesystem": {
+      "createFiles": true,
+      "editFiles": true,
+      "deleteFiles": false,
+      "createDirectories": true,
+      "deleteDirectories": false
+    },
+    "shell": {
+      "enabled": true,
+      "dangerous_commands_require_approval": [
+        "rm -rf",
+        "sudo",
+        "chmod 777",
+        "mkfs",
+        "dd",
+        "> /dev/"
+      ]
+    },
+    "env": {
+      "read": true,
+      "write": true,
+      "auto_load_dotenv": true
+    }
+  },
+  "behavior": {
+    "auto_commit": true,
+    "commit_message_style": "conventional",
+    "test_before_commit": true,
+    "lint_before_commit": true,
+    "create_backups": true,
+    "verbose_logging": true
+  },
+  "project": {
+    "type": "context-engineering",
+    "auto_detect_language": true,
+    "preferred_package_manager": "auto",
+    "test_command": "auto",
+    "lint_command": "auto"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "// Planning Phase MCPs": "============================================",
+    "// Uncomment MCPs as needed for each phase": "",
+    
+    "// context7": {
+    "//   "command": "npx",
+    "//   "args": ["-y", "@context-labs/context-mcp"],
+    "//   "disabled": true
+    "// }",
+    
+    "// omnisearch": {
+    "//   "command": "npx", 
+    "//   "args": ["-y", "@neomantra/mcp-omnisearch"],
+    "//   "env": {
+    "//     "TAVILY_API_KEY": "your-key-here"
+    "//   },
+    "//   "disabled": true
+    "// }",
+    
+    "// sequential-thinking": {
+    "//   "command": "npx",
+    "//   "args": ["-y", "mcp-sequentialthinking-tools"],
+    "//   "disabled": true
+    "// }",
+    
+    "// Development Phase MCPs": "==========================================",
+    
+    "// memory": {
+    "//   "command": "npx",
+    "//   "args": ["-y", "@modelcontextprotocol/server-memory"],
+    "//   "disabled": true
+    "// }",
+    
+    "// github": {
+    "//   "command": "npx",
+    "//   "args": ["-y", "@modelcontextprotocol/server-github"],
+    "//   "env": {
+    "//     "GITHUB_PERSONAL_ACCESS_TOKEN": "your-token-here"
+    "//   },
+    "//   "disabled": true
+    "// }"
+  }
+}

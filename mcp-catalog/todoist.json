@@ -1,0 +1,31 @@
+{
+  "name": "todoist",
+  "description": "Todoist task management integration - create, update, complete, and manage tasks",
+  "use_cases": [
+    "Task tracking during development",
+    "Project planning and management",
+    "Bug tracking and feature requests",
+    "Daily standup automation",
+    "Sprint planning"
+  ],
+  "recommended_phases": ["planning", "development", "testing"],
+  "env_vars": {
+    "TODOIST_API_TOKEN": "Get from https://todoist.com/app/settings/integrations/developer"
+  },
+  "setup_instructions": "1. Go to https://todoist.com/app/settings/integrations/developer\n2. Create a new API token\n3. Add TODOIST_API_TOKEN to your .env file",
+  "documentation": "https://developer.todoist.com/rest/v2/",
+  "mcp_config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-todoist"],
+    "env": {
+      "TODOIST_API_TOKEN": "${TODOIST_API_TOKEN}"
+    }
+  },
+  "example_commands": [
+    "Create a new task",
+    "Mark task as complete",
+    "List today's tasks",
+    "Update task priority",
+    "Add task to project"
+  ]
+}

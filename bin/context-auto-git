@@ -1,0 +1,487 @@
+#!/bin/bash
+
+# Context Engineer Auto-Pilot Mode with Enhanced Git Workflow
+# Includes branching, testing, and merging strategies
+
+set -e
+
+# Colors for better UX
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
+# Session state file
+SESSION_STATE_FILE=".context-session"
+ROADMAP_FILE="ROADMAP.md"
+CURRENT_PHASE_FILE=".current-phase"
+
+# Git configuration
+MAIN_BRANCH="main"
+PLANNING_PREFIX="planning"
+FEATURE_PREFIX="feature"
+TEST_PREFIX="test"
+
+# Utility functions
+print_header() {
+    echo -e "\n${BLUE}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}$1${NC}"
+    echo -e "${BLUE}══════════════════════════════════════════════════════════════${NC}\n"
+}
+
+print_phase() {
+    echo -e "\n${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${YELLOW}🚀 PHASE: $1${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+# Git helper functions
+get_current_branch() {
+    git branch --show-current
+}
+
+ensure_clean_working_tree() {
+    if [[ -n $(git status --porcelain) ]]; then
+        print_warning "Working tree has uncommitted changes"
+        git status --short
+        read -p "Commit these changes? (y/n) [y]: " commit_changes
+        commit_changes=${commit_changes:-y}
+        
+        if [[ "$commit_changes" == "y" ]]; then
+            git add -A
+            git commit -m "WIP: Uncommitted changes before branch switch"
+        else
+            print_error "Cannot proceed with uncommitted changes"
+            exit 1
+        fi
+    fi
+}
+
+create_branch() {
+    local branch_name=$1
+    local base_branch=${2:-$MAIN_BRANCH}
+    
+    ensure_clean_working_tree
+    
+    # Ensure base branch exists
+    if ! git show-ref --verify --quiet "refs/heads/$base_branch"; then
+        print_warning "Base branch $base_branch doesn't exist, using current branch"
+        base_branch=$(get_current_branch)
+    fi
+    
+    git checkout -b "$branch_name" "$base_branch"
+    print_success "Created and switched to branch: $branch_name"
+}
+
+# Enhanced auto-commit with descriptive messages
+auto_commit() {
+    local phase=$1
+    local step=$2
+    local description=$3
+    
+    if [[ -n $(git status --porcelain) ]]; then
+        git add -A
+        
+        # Create detailed commit message
+        local commit_msg="Phase $phase: $step"
+        if [[ -n "$description" ]]; then
+            commit_msg="$commit_msg
+
+$description"
+        fi
+        
+        git commit -m "$commit_msg" --quiet
+        print_success "Committed: $step"
+        
+        # Show brief summary
+        echo -e "${CYAN}  Files changed: $(git diff --name-only HEAD~1 | wc -l)${NC}"
+    fi
+}
+
+# Merge branch back to main
+merge_to_main() {
+    local source_branch=$1
+    local merge_type=${2:-"merge"} # merge or squash
+    
+    ensure_clean_working_tree
+    
+    local current_branch=$(get_current_branch)
+    
+    # Switch to main branch
+    git checkout $MAIN_BRANCH
+    
+    if [[ "$merge_type" == "squash" ]]; then
+        git merge --squash "$source_branch"
+        git commit -m "Merged $source_branch (squashed)"
+    else
+        git merge --no-ff "$source_branch" -m "Merged $source_branch"
+    fi
+    
+    print_success "Merged $source_branch to $MAIN_BRANCH"
+    
+    # Optionally delete the feature branch
+    read -p "Delete branch $source_branch? (y/n) [n]: " delete_branch
+    delete_branch=${delete_branch:-n}
+    
+    if [[ "$delete_branch" == "y" ]]; then
+        git branch -d "$source_branch"
+        print_success "Deleted branch $source_branch"
+    fi
+}
+
+# Execute phase with enhanced git workflow
+execute_phase_with_git() {
+    local phase_num=$1
+    local phase_dir="phases/phase-$phase_num"
+    
+    if [[ ! -d "$phase_dir" ]]; then
+        print_error "Phase $phase_num directory not found"
+        return 1
+    fi
+    
+    local phase_title=$(head -n 1 $phase_dir/INITIAL.md | sed 's/# //')
+    print_phase "$phase_num - $phase_title"
+    
+    # Create planning branch
+    local planning_branch="$PLANNING_PREFIX/phase-$phase_num"
+    create_branch "$planning_branch"
+    
+    # Show phase description
+    echo -e "${BLUE}Phase Description:${NC}"
+    cat "$phase_dir/INITIAL.md"
+    echo ""
+    
+    # Commit phase start
+    auto_commit "$phase_num" "Phase initialized" "Starting work on: $phase_title"
+    
+    # Generate PRP
+    print_header "Generating Implementation Plan..."
+    echo -e "${YELLOW}Copy this to Claude Code:${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo "/generate-prp $phase_dir/INITIAL.md"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    read -p "Press Enter when PRP is generated..."
+    auto_commit "$phase_num" "PRP generated" "Implementation plan created for $phase_title"
+    
+    # Find the generated PRP file
+    prp_file=""
+    if [[ -d "PRPs" ]]; then
+        # Find most recent .md file in PRPs directory
+        prp_file=$(find PRPs -name "*.md" -type f -exec stat -f "%m %N" {} \; 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-)
+        
+        # If nothing found with BSD stat, try GNU stat
+        if [[ -z "$prp_file" ]]; then
+            prp_file=$(find PRPs -name "*.md" -type f -exec stat -c "%Y %n" {} \; 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-)
+        fi
+    fi
+    
+    # Fallback to wildcard pattern if we couldn't detect
+    if [[ -z "$prp_file" ]]; then
+        prp_file="PRPs/phase-$phase_num-*.md"
+    fi
+    
+    # Show detected PRP file
+    if [[ "$prp_file" != *"*"* ]] && [[ -f "$prp_file" ]]; then
+        echo -e "\n${CYAN}PRP created at: $prp_file${NC}"
+    fi
+    
+    # Create feature branch from planning branch
+    local feature_branch="$FEATURE_PREFIX/phase-$phase_num"
+    create_branch "$feature_branch" "$planning_branch"
+    
+    # Execute PRP
+    print_header "Executing Implementation..."
+    echo -e "${YELLOW}Copy this to Claude Code:${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo "/execute-prp $prp_file"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    
+    echo -e "\n${GREEN}While Claude Code is working:${NC}"
+    echo "- Watch the implementation progress"
+    echo "- Let it complete all validations"
+    echo "- Review the changes when done"
+    
+    read -p "Press Enter when implementation is complete..."
+    auto_commit "$phase_num" "Implementation complete" "Core implementation for $phase_title"
+    
+    # Testing phase
+    print_header "Testing Phase..."
+    
+    # Check if tests exist
+    if [[ -d "tests" ]] || [[ -f "pytest.ini" ]] || [[ -f "package.json" ]]; then
+        echo "Running tests..."
+        
+        # Create test branch
+        local test_branch="$TEST_PREFIX/phase-$phase_num"
+        create_branch "$test_branch" "$feature_branch"
+        
+        echo -e "${YELLOW}Run your test suite now${NC}"
+        echo "Common commands:"
+        echo "  Python: pytest"
+        echo "  JavaScript: npm test"
+        echo "  Go: go test ./..."
+        
+        read -p "Press Enter when tests are complete..."
+        
+        read -p "Did all tests pass? (y/n) [y]: " tests_passed
+        tests_passed=${tests_passed:-y}
+        
+        if [[ "$tests_passed" == "y" ]]; then
+            auto_commit "$phase_num" "Tests passing" "All tests pass for $phase_title"
+            
+            # Merge test branch back to feature
+            git checkout "$feature_branch"
+            git merge --no-ff "$test_branch" -m "Merged passing tests"
+            git branch -d "$test_branch"
+        else
+            auto_commit "$phase_num" "Test failures" "Tests failing - needs fixes"
+            print_warning "Tests failed - fix them before continuing"
+            
+            echo -e "\n${YELLOW}Options:${NC}"
+            echo "1) Fix tests now"
+            echo "2) Continue anyway (not recommended)"
+            echo "3) Exit"
+            
+            read -p "Choose option [1]: " test_option
+            test_option=${test_option:-1}
+            
+            case $test_option in
+                1)
+                    echo "Fix the tests, then run this script again with --resume"
+                    exit 0
+                    ;;
+                2)
+                    print_warning "Continuing with failing tests"
+                    ;;
+                3)
+                    exit 0
+                    ;;
+            esac
+        fi
+    fi
+    
+    # Validation
+    print_header "Validating Phase Completion..."
+    echo -e "${BLUE}Success Criteria:${NC}"
+    cat "$phase_dir/SUCCESS_CRITERIA.md"
+    echo ""
+    
+    read -p "Does this phase meet all success criteria? (y/n) [y]: " success
+    success=${success:-y}
+    
+    if [[ "$success" == "y" ]]; then
+        auto_commit "$phase_num" "Phase validated" "Success criteria met for $phase_title"
+        
+        # Merge feature to planning
+        git checkout "$planning_branch"
+        git merge --no-ff "$feature_branch" -m "Merged implementation"
+        
+        # Merge planning to main
+        print_header "Merging to $MAIN_BRANCH..."
+        merge_to_main "$planning_branch"
+        
+        print_success "Phase $phase_num completed and merged!"
+    else
+        print_warning "Phase needs more work"
+        echo "Current branch: $(get_current_branch)"
+        echo "Fix issues and run with --resume when ready"
+        exit 0
+    fi
+    
+    return 0
+}
+
+# Initialize git if needed
+init_git_repo() {
+    if [[ ! -d .git ]]; then
+        git init
+        
+        # Create initial .gitignore if it doesn't exist
+        if [[ ! -f .gitignore ]]; then
+            cat > .gitignore << 'EOF'
+# Environment
+.env
+.env.*
+!.env.example
+
+# Session files
+.context-session
+.current-phase
+
+# MCP with injected keys
+.mcp/mcp.json
+!.mcp/mcp.json.template
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+EOF
+        fi
+        
+        git add -A
+        git commit -m "Initial commit: Context Engineering project"
+        
+        # Rename master to main if needed
+        if [[ $(get_current_branch) == "master" ]]; then
+            git branch -m master main
+        fi
+        
+        print_success "Git repository initialized with main branch"
+    fi
+}
+
+# Main workflow
+main() {
+    print_header "🚀 Context Engineer - Git-Enhanced Auto-Pilot Mode"
+    
+    # Initialize git
+    init_git_repo
+    
+    # Check for roadmap
+    if [[ ! -f "$ROADMAP_FILE" ]]; then
+        print_error "No ROADMAP.md found. Run 'context-auto' first to generate a roadmap."
+        exit 1
+    fi
+    
+    # Count total phases
+    total_phases=$(find phases -name "phase-*" -type d 2>/dev/null | wc -l)
+    
+    if [[ $total_phases -eq 0 ]]; then
+        print_error "No phases found in phases/ directory"
+        exit 1
+    fi
+    
+    print_success "Found $total_phases phases in roadmap"
+    
+    # Show git status
+    echo -e "\n${BLUE}Git Status:${NC}"
+    echo "Current branch: $(get_current_branch)"
+    echo "Total commits: $(git rev-list --count HEAD 2>/dev/null || echo 0)"
+    echo ""
+    
+    # Execute phases
+    for ((phase=1; phase<=$total_phases; phase++)); do
+        print_header "Starting Phase $phase of $total_phases"
+        
+        if execute_phase_with_git "$phase"; then
+            print_success "Phase $phase completed successfully!"
+            
+            if [[ $phase -lt $total_phases ]]; then
+                echo -e "\n${GREEN}Ready for next phase?${NC}"
+                read -p "Continue to phase $((phase + 1))? (y/n) [y]: " continue_next
+                continue_next=${continue_next:-y}
+                
+                if [[ "$continue_next" != "y" ]]; then
+                    print_warning "Paused after phase $phase"
+                    echo "Run with --resume to continue"
+                    exit 0
+                fi
+            fi
+        else
+            print_warning "Phase $phase needs retry"
+            ((phase--))
+        fi
+    done
+    
+    print_header "🎉 All Phases Complete!"
+    
+    # Final summary
+    echo -e "${GREEN}Project Summary:${NC}"
+    echo "- Total phases completed: $total_phases"
+    echo "- Current branch: $(get_current_branch)"
+    echo "- Total commits: $(git rev-list --count HEAD)"
+    echo ""
+    
+    # Show branch structure
+    echo -e "${BLUE}Branch History:${NC}"
+    git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit -10
+}
+
+# Show help
+show_help() {
+    cat << EOF
+Context Engineer - Git-Enhanced Auto-Pilot Mode
+
+This version includes:
+- Automatic branching for each phase
+- Separate planning, feature, and test branches
+- Commits after each sub-phase
+- Automatic merging to main
+- Test integration
+
+Usage: context-auto-git [options]
+
+Options:
+  --help      Show this help message
+  --resume    Resume from last saved state
+  --status    Show current git and phase status
+
+Workflow:
+1. Creates planning branch for PRP generation
+2. Creates feature branch for implementation
+3. Creates test branch for testing (if tests exist)
+4. Merges back to main when phase completes
+5. Starts fresh branch for next phase
+
+Branch naming:
+- planning/phase-N  - For PRP generation
+- feature/phase-N   - For implementation
+- test/phase-N      - For testing
+- main              - Stable merged code
+
+The tool ensures clean git history with meaningful commits.
+EOF
+}
+
+# Parse arguments
+case "${1:-}" in
+    --help|-h)
+        show_help
+        ;;
+    --resume)
+        # TODO: Implement resume functionality
+        print_warning "Resume functionality coming soon"
+        ;;
+    --status)
+        if [[ -d .git ]]; then
+            echo "Git Status:"
+            git status
+            echo ""
+            echo "Current branch: $(get_current_branch)"
+            echo "Recent commits:"
+            git log --oneline -5
+        else
+            echo "Not a git repository"
+        fi
+        ;;
+    *)
+        main
+        ;;
+esac

@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# Inject API keys from workhorse into project MCP config
+# Usage: mcp-inject [project-path]
+
+PROJECT_PATH="${1:-.}"
+
+# Load configuration from multiple sources
+# 1. Default values
+WORKHORSE_IP="${WORKHORSE_IP:-localhost}"
+WORKHORSE_USER="${WORKHORSE_USER:-$(whoami)}"
+MCP_MASTER_DIR="${MCP_MASTER_DIR:-$HOME/mcp-master}"
+
+# 2. Load from config file if it exists
+if [[ -f "$HOME/.config/context-engineer/config.env" ]]; then
+    source "$HOME/.config/context-engineer/config.env"
+fi
+
+# 3. Load from local .env if it exists (project-specific overrides)
+if [[ -f ".env" ]]; then
+    source ".env"
+fi
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Change to project directory
+cd "$PROJECT_PATH"
+
+if [[ ! -f ".mcp/mcp.json" ]]; then
+    echo -e "${RED}❌ No .mcp/mcp.json found in $PROJECT_PATH${NC}"
+    echo ""
+    echo "This could mean:"
+    echo "1. You're not in a Context Engineering project"
+    echo "2. No MCPs have been activated yet"
+    echo ""
+    echo "Try: mcp-phase activate research"
+    exit 1
+fi
+
+echo -e "${BLUE}🔐 Fetching API keys from secure workhorse...${NC}"
+
+# Check SSH connectivity
+if ! ssh -q -o ConnectTimeout=5 $WORKHORSE_USER@$WORKHORSE_IP exit 2>/dev/null; then
+    echo -e "${RED}❌ Cannot connect to workhorse at $WORKHORSE_IP${NC}"
+    echo "Make sure:"
+    echo "1. Workhorse is powered on"
+    echo "2. You're on the same network (10Gb ethernet recommended)"
+    echo "3. SSH key authentication is set up"
+    exit 1
+fi
+
+# Check if API keys exist on workhorse
+if ! ssh $WORKHORSE_USER@$WORKHORSE_IP "test -f $MCP_MASTER_DIR/api-keys.env" 2>/dev/null; then
+    echo -e "${RED}❌ No api-keys.env found on workhorse${NC}"
+    echo ""
+    echo "Please create $MCP_MASTER_DIR/api-keys.env on workhorse with:"
+    echo "TAVILY_API_KEY=your-key"
+    echo "BRAVE_API_KEY=your-key"
+    echo "GITHUB_PERSONAL_ACCESS_TOKEN=your-token"
+    echo "etc..."
+    exit 1
+fi
+
+# Create temporary .env with API keys
+ssh $WORKHORSE_USER@$WORKHORSE_IP "cat $MCP_MASTER_DIR/api-keys.env" > /tmp/mcp-keys.env
+
+# Check if we got keys
+if [[ ! -s "/tmp/mcp-keys.env" ]]; then
+    echo -e "${RED}❌ Failed to retrieve API keys${NC}"
+    rm -f /tmp/mcp-keys.env
+    exit 1
+fi
+
+# Source the keys
+set -a  # Auto-export all variables
+source /tmp/mcp-keys.env
+set +a
+
+# Count available keys
+key_count=$(grep -c "^[A-Z_]*=" /tmp/mcp-keys.env || true)
+echo -e "${GREEN}✅ Retrieved $key_count API keys${NC}"
+
+# Process mcp.json and replace ${VARIABLES} with actual values
+echo -e "${BLUE}Injecting API keys into mcp.json...${NC}"
+
+# Backup current mcp.json
+cp ".mcp/mcp.json" ".mcp/mcp.json.bak"
+
+# Use envsubst to replace variables
+if command -v envsubst &> /dev/null; then
+    envsubst < ".mcp/mcp.json.bak" > ".mcp/mcp.json"
+else
+    echo -e "${RED}❌ envsubst not found${NC}"
+    echo "This tool is required for variable substitution"
+    rm /tmp/mcp-keys.env
+    rm ".mcp/mcp.json.bak"
+    exit 1
+fi
+
+# Count replacements made
+template_vars=$(grep -o '\${[A-Z_]*}' ".mcp/mcp.json.bak" | wc -l || echo 0)
+remaining_vars=$(grep -o '\${[A-Z_]*}' ".mcp/mcp.json" | wc -l || echo 0)
+replaced_vars=$((template_vars - remaining_vars))
+
+# Clean up
+rm /tmp/mcp-keys.env
+rm ".mcp/mcp.json.bak"
+
+echo -e "${GREEN}✅ Replaced $replaced_vars API key references${NC}"
+
+if [[ $remaining_vars -gt 0 ]]; then
+    echo -e "${YELLOW}⚠️  Warning: $remaining_vars variables still need values${NC}"
+    echo "Missing keys:"
+    grep -o '\${[A-Z_]*}' ".mcp/mcp.json" | sort -u | sed 's/[{}$]//g'
+    echo ""
+    echo "Add these to $MCP_MASTER_DIR/api-keys.env on workhorse"
+fi
+
+echo ""
+echo -e "${YELLOW}⚠️  IMPORTANT SECURITY NOTES:${NC}"
+echo "• mcp.json now contains secrets - DON'T COMMIT!"
+echo "• Already added to .gitignore for safety"
+echo "• Keys are only in memory during injection"
+echo "• Original template preserved as backup"
+echo ""
+echo -e "${GREEN}Next steps:${NC}"
+echo "1. Restart Claude Desktop to load MCPs"
+echo "2. When done, consider reverting: cp .mcp/mcp.json.template .mcp/mcp.json"

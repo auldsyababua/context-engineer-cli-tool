@@ -1,0 +1,36 @@
+{
+  "name": "context7",
+  "description": "Provides up-to-date documentation for libraries and frameworks",
+  "use_cases": [
+    "Fetching current API documentation",
+    "Getting official code examples",
+    "Understanding library updates and changes",
+    "Accessing framework-specific best practices"
+  ],
+  "recommended_phases": [
+    "planning",
+    "implementation",
+    "integration",
+    "debugging"
+  ],
+  "benefits": [
+    "Always current documentation (not limited by training cutoff)",
+    "Official examples and patterns",
+    "Comprehensive API references",
+    "Framework migration guides"
+  ],
+  "env_vars": {},
+  "mcp_config": {
+    "command": "npx",
+    "args": ["-y", "@context-labs/context-mcp"],
+    "env": {}
+  },
+  "setup_instructions": "Context7 MCP requires no API keys. It will be automatically configured when enabled.",
+  "documentation": "https://github.com/context-labs/context-mcp",
+  "example_prompts": [
+    "Get the latest Next.js 14 app router documentation",
+    "Show me how to use React Server Components",
+    "What's the current FastAPI async pattern?",
+    "Find Pydantic v2 migration guide"
+  ]
+}

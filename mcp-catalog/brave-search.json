@@ -1,0 +1,29 @@
+{
+  "name": "brave-search",
+  "description": "Privacy-focused web search using Brave Search API",
+  "use_cases": [
+    "Researching technical documentation",
+    "Finding code examples and solutions",
+    "Checking latest framework updates",
+    "Privacy-conscious searching",
+    "Getting search results without tracking"
+  ],
+  "recommended_phases": ["research", "planning"],
+  "env_vars": {
+    "BRAVE_API_KEY": "Get from https://brave.com/search/api/"
+  },
+  "setup_instructions": "1. Go to https://brave.com/search/api/\n2. Sign up for an API account\n3. Generate an API key\n4. Add BRAVE_API_KEY to your .env file",
+  "documentation": "https://brave.com/search/api/",
+  "mcp_config": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+    "env": {
+      "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+    }
+  },
+  "example_commands": [
+    "Search for React 18 features",
+    "Find Python async examples",
+    "Search for security best practices"
+  ]
+}

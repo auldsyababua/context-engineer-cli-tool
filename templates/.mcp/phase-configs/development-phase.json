@@ -1,0 +1,16 @@
+{
+  "name": "Development Phase",
+  "description": "MCPs for active code development",
+  "mcps": [
+    "context7",
+    "memory",
+    "github",
+    "filesystem"
+  ],
+  "rationale": {
+    "context7": "API documentation while coding",
+    "memory": "Maintain context about decisions",
+    "github": "Version control operations",
+    "filesystem": "Enhanced file operations"
+  }
+}

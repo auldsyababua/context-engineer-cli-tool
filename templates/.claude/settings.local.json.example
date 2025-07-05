@@ -1,0 +1,54 @@
+{
+  "// Note": "Copy this to settings.local.json and customize for your specific needs",
+  "// Info": "settings.local.json overrides settings.json and is gitignored",
+  
+  "permissions": {
+    "git": {
+      "commands": {
+        "push": true,
+        "reset": true
+      }
+    },
+    "filesystem": {
+      "deleteFiles": true,
+      "deleteDirectories": true
+    },
+    "custom_commands": {
+      "allowed": [
+        "docker-compose",
+        "kubectl",
+        "terraform"
+      ],
+      "blocked": [
+        "rm -rf /",
+        ":(){ :|:& };:"
+      ]
+    }
+  },
+  
+  "behavior": {
+    "auto_commit": false,
+    "require_approval_for": [
+      "database_migrations",
+      "production_deploys",
+      "breaking_changes"
+    ]
+  },
+  
+  "api_endpoints": {
+    "production": {
+      "require_confirmation": true,
+      "allowed_methods": ["GET"],
+      "blocked_methods": ["DELETE", "DROP"]
+    }
+  },
+  
+  "project_specific": {
+    "database_url_var": "DATABASE_URL",
+    "test_database_url_var": "TEST_DATABASE_URL",
+    "sensitive_files": [
+      "config/secrets.yml",
+      "terraform/*.tfvars"
+    ]
+  }
+}

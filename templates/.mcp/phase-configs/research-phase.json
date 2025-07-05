@@ -1,0 +1,16 @@
+{
+  "name": "Research & Analysis Phase",
+  "description": "MCPs for researching solutions and analyzing existing code",
+  "mcps": [
+    "omnisearch",
+    "sequential-thinking",
+    "memory",
+    "context7"
+  ],
+  "rationale": {
+    "omnisearch": "Research patterns and solutions across the web",
+    "sequential-thinking": "Break down complex problems systematically",
+    "memory": "Track findings and decisions",
+    "context7": "Access up-to-date library documentation"
+  }
+}

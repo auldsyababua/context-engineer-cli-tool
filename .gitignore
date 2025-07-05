@@ -1,0 +1,27 @@
+# Test outputs
+test-projects/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# User configuration
+config/user-settings.conf
+.env
+.env.local
+
+# Personal infrastructure configs
+config/personal-setup.env
+.personal-config
+personal-configs/
+
+# Sensitive test data
+test-with-real-keys/

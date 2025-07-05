@@ -1,0 +1,589 @@
+#!/bin/bash
+
+# Context Engineer CLI Tool
+# Interactive setup wizard for Context Engineering projects
+
+set -e
+
+# Colors for better UX
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Default configuration
+DEFAULT_PROJECTS_DIR="$HOME/Desktop/projects"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TEMPLATES_DIR="$(dirname "$SCRIPT_DIR")/templates"
+
+# Utility functions
+print_header() {
+    echo -e "\n${BLUE}══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${GREEN}$1${NC}"
+    echo -e "${BLUE}══════════════════════════════════════════════════════════════${NC}\n"
+}
+
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+# Format project name to valid directory name
+format_project_name() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//'
+}
+
+# Main context engineering setup
+context_engineer_setup() {
+    clear
+    print_header "🚀 Welcome to Context Engineer CLI Tool!"
+    echo "This wizard will help you set up a new Context Engineering project."
+    
+    # Get project name
+    echo -e "\n${BLUE}Step 1: Project Name${NC}"
+    read -p "What are we calling this project? " project_name
+    
+    if [[ -z "$project_name" ]]; then
+        print_error "Project name cannot be empty!"
+        return 1
+    fi
+    
+    # Format the name
+    formatted_name=$(format_project_name "$project_name")
+    if [[ "$project_name" != "$formatted_name" ]]; then
+        echo -e "Formatted name: ${YELLOW}$formatted_name${NC}"
+    fi
+    
+    # Determine project location
+    echo -e "\n${BLUE}Step 2: Project Location${NC}"
+    if [[ ! -d "$DEFAULT_PROJECTS_DIR" ]]; then
+        print_warning "Default projects directory not found: $DEFAULT_PROJECTS_DIR"
+        read -p "Create it? (y/n) [y]: " create_default
+        create_default=${create_default:-y}
+        
+        if [[ "$create_default" == "y" ]]; then
+            mkdir -p "$DEFAULT_PROJECTS_DIR"
+            print_success "Created $DEFAULT_PROJECTS_DIR"
+            project_path="$DEFAULT_PROJECTS_DIR/$formatted_name"
+        else
+            read -p "Enter custom project path: " custom_path
+            project_path="$custom_path/$formatted_name"
+            mkdir -p "$(dirname "$project_path")"
+        fi
+    else
+        project_path="$DEFAULT_PROJECTS_DIR/$formatted_name"
+    fi
+    
+    # Check if project already exists
+    if [[ -d "$project_path" ]]; then
+        print_error "Project already exists at: $project_path"
+        read -p "Overwrite? (y/n) [n]: " overwrite
+        overwrite=${overwrite:-n}
+        if [[ "$overwrite" != "y" ]]; then
+            print_warning "Setup cancelled."
+            return 1
+        fi
+        rm -rf "$project_path"
+    fi
+    
+    # Project type selection
+    echo -e "\n${BLUE}Step 3: Project Type${NC}"
+    echo "1) Full Context Engineering (all files and examples)"
+    echo "2) Minimal (CLAUDE.md + commands only)"
+    echo "3) Custom selection"
+    read -p "Select project type [1]: " project_type
+    project_type=${project_type:-1}
+    
+    # Technology stack
+    echo -e "\n${BLUE}Step 4: Primary Language${NC}"
+    echo "1) Python"
+    echo "2) TypeScript"
+    echo "3) JavaScript"
+    echo "4) Go"
+    echo "5) Other"
+    read -p "Select primary language [1]: " lang_choice
+    lang_choice=${lang_choice:-1}
+    
+    case $lang_choice in
+        1) primary_language="Python"; file_extension="py" ;;
+        2) primary_language="TypeScript"; file_extension="ts" ;;
+        3) primary_language="JavaScript"; file_extension="js" ;;
+        4) primary_language="Go"; file_extension="go" ;;
+        5) 
+            read -p "Enter language name: " primary_language
+            read -p "Enter file extension: " file_extension
+            ;;
+        *) primary_language="Python"; file_extension="py" ;;
+    esac
+    
+    # Testing framework
+    echo -e "\n${BLUE}Step 5: Testing Framework${NC}"
+    case $primary_language in
+        "Python")
+            echo "1) pytest (recommended)"
+            echo "2) unittest"
+            echo "3) nose2"
+            echo "4) None"
+            read -p "Select testing framework [1]: " test_choice
+            test_choice=${test_choice:-1}
+            case $test_choice in
+                1) test_framework="pytest" ;;
+                2) test_framework="unittest" ;;
+                3) test_framework="nose2" ;;
+                4) test_framework="none" ;;
+                *) test_framework="pytest" ;;
+            esac
+            ;;
+        "TypeScript"|"JavaScript")
+            echo "1) Jest (recommended)"
+            echo "2) Mocha"
+            echo "3) Vitest"
+            echo "4) None"
+            read -p "Select testing framework [1]: " test_choice
+            test_choice=${test_choice:-1}
+            case $test_choice in
+                1) test_framework="jest" ;;
+                2) test_framework="mocha" ;;
+                3) test_framework="vitest" ;;
+                4) test_framework="none" ;;
+                *) test_framework="jest" ;;
+            esac
+            ;;
+        *)
+            read -p "Enter testing framework (or 'none'): " test_framework
+            ;;
+    esac
+    
+    # Initial feature description
+    echo -e "\n${BLUE}Step 6: First Feature${NC}"
+    echo "Describe your first feature in one or two sentences:"
+    read -p "> " feature_description
+    
+    # Create project structure
+    print_header "Creating Project Structure..."
+    
+    mkdir -p "$project_path"/{.claude/commands,.mcp,examples,tests,docs}
+    
+    # Copy templates based on project type
+    case $project_type in
+        1) # Full
+            cp -r "$TEMPLATES_DIR"/* "$project_path/"
+            # Remove ROADMAP.md - it should be generated
+            rm -f "$project_path/ROADMAP.md"
+            ;;
+        2) # Minimal
+            cp "$TEMPLATES_DIR/CLAUDE.md" "$project_path/"
+            cp -r "$TEMPLATES_DIR/.claude" "$project_path/"
+            ;;
+        3) # Custom
+            echo -e "\n${BLUE}Select files to include:${NC}"
+            
+            read -p "Include CLAUDE.md? (y/n) [y]: " inc_claude
+            inc_claude=${inc_claude:-y}
+            [[ "$inc_claude" == "y" ]] && cp "$TEMPLATES_DIR/CLAUDE.md" "$project_path/"
+            
+            read -p "Include PLANNING.md? (y/n) [y]: " inc_planning
+            inc_planning=${inc_planning:-y}
+            [[ "$inc_planning" == "y" ]] && cp "$TEMPLATES_DIR/PLANNING.md" "$project_path/"
+            
+            read -p "Include TASK.md? (y/n) [y]: " inc_task
+            inc_task=${inc_task:-y}
+            [[ "$inc_task" == "y" ]] && cp "$TEMPLATES_DIR/TASK.md" "$project_path/"
+            
+            read -p "Include example files? (y/n) [y]: " inc_examples
+            inc_examples=${inc_examples:-y}
+            [[ "$inc_examples" == "y" ]] && cp -r "$TEMPLATES_DIR/examples" "$project_path/"
+            
+            # Always include commands
+            cp -r "$TEMPLATES_DIR/.claude" "$project_path/"
+            ;;
+    esac
+    
+    # Customize templates with project information
+    print_header "Customizing Templates..."
+    
+    # Update CLAUDE.md if it exists
+    if [[ -f "$project_path/CLAUDE.md" ]]; then
+        sed -i.bak "s/PROJECT_NAME/$project_name/g" "$project_path/CLAUDE.md"
+        sed -i.bak "s/PRIMARY_LANGUAGE/$primary_language/g" "$project_path/CLAUDE.md"
+        sed -i.bak "s/TEST_FRAMEWORK/$test_framework/g" "$project_path/CLAUDE.md"
+        sed -i.bak "s/FILE_EXTENSION/$file_extension/g" "$project_path/CLAUDE.md"
+        rm "$project_path/CLAUDE.md.bak"
+    fi
+    
+    # Create INITIAL.md
+    cat > "$project_path/INITIAL.md" << EOF
+## FEATURE:
+$feature_description
+
+## EXAMPLES:
+[Reference files in the examples/ folder that demonstrate patterns to follow]
+
+## DOCUMENTATION:
+[Add links to relevant documentation, APIs, or library guides]
+
+## OTHER CONSIDERATIONS:
+- Primary language: $primary_language
+- Testing framework: $test_framework
+- Project structure follows Context Engineering standards
+- See CLAUDE.md for project-specific conventions
+
+## SUCCESS CRITERIA:
+- [ ] Feature is fully implemented
+- [ ] All tests pass
+- [ ] Code follows project conventions
+- [ ] Documentation is updated
+EOF
+
+    # Create comprehensive .gitignore
+    cat > "$project_path/.gitignore" << EOF
+# Environment Variables - NEVER COMMIT THESE
+.env
+.env.*
+!.env.example
+!.env.template
+*.env
+config/secrets.*
+secrets/
+
+# Claude settings - local overrides
+.claude/settings.local.json
+!.claude/settings.local.json.example
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+*-env/
+*_env/
+
+# API Keys and Credentials
+*.pem
+*.key
+*.cert
+*.p12
+*_rsa
+*_dsa
+credentials.json
+service-account*.json
+firebase*.json
+google*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# Language specific - Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+*.cover
+.hypothesis/
+
+# Language specific - Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Build outputs
+dist/
+build/
+out/
+target/
+*.egg-info/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+tmp/
+temp/
+
+# Project specific
+data/
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Local development
+.local/
+local_settings.py
+*.local.*
+EOF
+
+    # Create README.md
+    cat > "$project_path/README.md" << EOF
+# $project_name
+
+A Context Engineering project built with $primary_language.
+
+## 🚀 Quick Start
+
+1. **Setup Environment**
+   \`\`\`bash
+   cd $formatted_name
+   # Add your setup commands here
+   \`\`\`
+
+2. **Generate Implementation Plan**
+   \`\`\`bash
+   # In Claude Code:
+   /generate-prp INITIAL.md
+   \`\`\`
+
+3. **Execute Implementation**
+   \`\`\`bash
+   # In Claude Code:
+   /execute-prp PRPs/your-feature.md
+   \`\`\`
+
+## 📁 Project Structure
+
+\`\`\`
+├── .claude/            # Claude Code commands
+├── examples/           # Code patterns and examples
+├── tests/              # Test suite
+├── docs/               # Documentation
+├── CLAUDE.md           # AI coding assistant rules
+├── INITIAL.md          # Feature specifications
+└── README.md           # This file
+\`\`\`
+
+## 🧪 Testing
+
+Tests use $test_framework. Run with:
+\`\`\`bash
+# Add test command here
+\`\`\`
+
+## 📚 Documentation
+
+See [CLAUDE.md](CLAUDE.md) for coding conventions and AI assistant rules.
+
+## 🤝 Contributing
+
+This project uses Context Engineering methodology. See the project documentation for details.
+EOF
+
+    # Create .env.example file with common patterns
+    cat > "$project_path/.env.example" << EOF
+# Environment Configuration for $project_name
+# Copy this file to .env and fill in your actual values
+
+# ============================================
+# DEVELOPMENT PHASE
+# ============================================
+# Basic configuration for local development
+
+# Application
+APP_ENV=development
+DEBUG=true
+LOG_LEVEL=debug
+
+# ============================================
+# DATABASE (when needed)
+# ============================================
+# PostgreSQL connection
+# Get from: Local install or cloud provider
+# Format: postgresql://user:password@host:port/dbname
+# DATABASE_URL=postgresql://localhost/myapp
+
+# ============================================
+# EXTERNAL APIS (when needed)
+# ============================================
+# OpenAI API Key
+# Get from: https://platform.openai.com/api-keys
+# OPENAI_API_KEY=sk-...
+
+# Third-party services
+# Add as needed for your specific integrations
+
+# ============================================
+# AUTHENTICATION (when needed)
+# ============================================
+# Generate secrets with: openssl rand -base64 32
+# JWT_SECRET=your_random_secret_here
+# SESSION_SECRET=your_random_secret_here
+
+# ============================================
+# PROJECT SPECIFIC
+# ============================================
+# Add your project-specific variables below
+EOF
+
+    # Auto-create .env from template
+    cp "$project_path/.env.example" "$project_path/.env"
+    print_success "Created .env from template"
+
+    # Create Python virtual environment if Python project
+    if [[ "$primary_language" == "Python" ]]; then
+        echo -e "\n${BLUE}Setting up Python environment...${NC}"
+        
+        # Create venv
+        if command -v python3 &> /dev/null; then
+            cd "$project_path"
+            python3 -m venv venv
+            print_success "Created virtual environment"
+            
+            # Create requirements.txt
+            cat > "$project_path/requirements.txt" << EOF
+# Core dependencies
+python-dotenv==1.0.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+
+# Linting and formatting  
+ruff==0.1.9
+black==23.12.1
+mypy==1.8.0
+
+# Add your project dependencies below:
+EOF
+            
+            # Create activation reminder
+            cat > "$project_path/ACTIVATE_VENV.md" << EOF
+# Virtual Environment Activation
+
+Before working on this project, activate the virtual environment:
+
+## On macOS/Linux:
+\`\`\`bash
+source venv/bin/activate
+\`\`\`
+
+## On Windows:
+\`\`\`bash
+venv\\Scripts\\activate
+\`\`\`
+
+## Install dependencies:
+\`\`\`bash
+pip install -r requirements.txt
+\`\`\`
+
+## Deactivate when done:
+\`\`\`bash
+deactivate
+\`\`\`
+EOF
+            
+            print_success "Created requirements.txt and activation guide"
+        else
+            print_warning "Python3 not found - skipping venv creation"
+        fi
+    fi
+
+    # Final summary
+    print_header "✅ Project Created Successfully!"
+    
+    echo -e "${GREEN}Project Details:${NC}"
+    echo -e "  Name: ${YELLOW}$project_name${NC}"
+    echo -e "  Path: ${YELLOW}$project_path${NC}"
+    echo -e "  Language: ${YELLOW}$primary_language${NC}"
+    echo -e "  Testing: ${YELLOW}$test_framework${NC}"
+    
+    echo -e "\n${GREEN}Next Steps:${NC}"
+    echo -e "1. Navigate to your project:"
+    echo -e "   ${YELLOW}cd $project_path${NC}"
+    echo -e "\n2. Copy the following INITIAL.md content to Claude Code:"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    cat "$project_path/INITIAL.md"
+    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "\n3. In Claude Code, run:"
+    echo -e "   ${YELLOW}/generate-prp INITIAL.md${NC}"
+    echo -e "\n4. Then execute the generated PRP:"
+    echo -e "   ${YELLOW}/execute-prp PRPs/your-feature.md${NC}"
+    
+    # Offer to open in editor
+    echo -e "\n${GREEN}Optional Actions:${NC}"
+    read -p "Open project in VS Code? (y/n) [n]: " open_vscode
+    open_vscode=${open_vscode:-n}
+    if [[ "$open_vscode" == "y" ]] && command -v code &> /dev/null; then
+        code "$project_path"
+        print_success "Opened in VS Code"
+    fi
+    
+    read -p "Initialize git repository? (y/n) [y]: " init_git
+    init_git=${init_git:-y}
+    if [[ "$init_git" == "y" ]]; then
+        cd "$project_path"
+        git init
+        git add .
+        git commit -m "Initial commit: Context Engineering project setup"
+        print_success "Git repository initialized"
+    fi
+}
+
+# Main entry point
+case "${1:-}" in
+    --help|-h)
+        echo "Context Engineer CLI Tool"
+        echo ""
+        echo "Usage: context [command]"
+        echo ""
+        echo "Commands:"
+        echo "  (none)     Start interactive project setup"
+        echo "  --help     Show this help message"
+        echo "  --version  Show version information"
+        echo ""
+        echo "Related MCP Commands:"
+        echo "  mcp-sync            Sync MCP configs from workhorse"
+        echo "  mcp-inject          Inject API keys into project MCPs"
+        echo "  mcp-phase           Manage phase-based MCP activation"
+        echo "  mcp-workhorse-setup Initial setup on workhorse server"
+        echo ""
+        echo "Workflow Commands:"
+        echo "  context-auto        Auto-pilot mode with phase progression"
+        echo "  context-mcp         MCP catalog management"
+        echo ""
+        echo "See individual command --help for more details"
+        ;;
+    --version|-v)
+        echo "Context Engineer CLI Tool v1.0.0"
+        ;;
+    *)
+        context_engineer_setup
+        ;;
+esac
