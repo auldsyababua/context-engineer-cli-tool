@@ -11,7 +11,12 @@
     },
     "filesystem": {
       "deleteFiles": true,
-      "deleteDirectories": true
+      "deleteDirectories": true,
+      "protected_paths": [
+        ".claude/",
+        ".claude/commands/",
+        ".claude/settings.local.json"
+      ]
     },
     "custom_commands": {
       "allowed": [
@@ -49,6 +54,14 @@
     "sensitive_files": [
       "config/secrets.yml",
       "terraform/*.tfvars"
+    ],
+    "protected_directories": [
+      ".claude"
+    ],
+    "read_only_files": [
+      ".claude/settings.local.json",
+      ".claude/commands/generate-prp.md",
+      ".claude/commands/execute-prp.md"
     ]
   }
 }
