@@ -1,5 +1,29 @@
 # Claude Memory File - PROJECT_NAME
 
+## ⚠️ CRITICAL PROTECTION RULES
+
+### 🚫 NEVER MODIFY THE .claude DIRECTORY 🚫
+
+The `.claude/` directory and its contents are PROTECTED and must NEVER be modified:
+
+- **DO NOT** edit, delete, or modify `.claude/commands/` directory
+- **DO NOT** edit, delete, or modify `.claude/settings.local.json`
+- **DO NOT** create new files in `.claude/` directory
+- **DO NOT** rename or move files in `.claude/` directory
+
+These files are critical for Claude Code command functionality and project workflow.
+
+### Protected Files:
+- `.claude/commands/generate-prp.md`
+- `.claude/commands/execute-prp.md`
+- `.claude/settings.local.json`
+
+### If You Need to Update Commands:
+1. Ask the user explicitly for permission
+2. Make changes in a separate branch
+3. Test thoroughly before merging
+4. Never make changes without explicit user approval
+
 ## 🔄 Project Awareness & Context
 - **Always read `PLANNING.md`** at the start of a new conversation to understand the project's architecture, goals, style, and constraints.
 - **Check `TASK.md`** before starting a new task. If the task isn't listed, add it with a brief description and today's date.
